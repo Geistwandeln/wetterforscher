@@ -1,0 +1,838 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Wetterforscher im Einsatz</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Fredoka+One&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --primary: #2563eb;
+    --primary-light: #dbeafe;
+    --primary-dark: #1e40af;
+    --accent: #f59e0b;
+    --accent-light: #fef3c7;
+    --success: #10b981;
+    --danger: #ef4444;
+    --bg: #f0f4ff;
+    --card: #ffffff;
+    --text: #1e293b;
+    --text-light: #64748b;
+    --radius: 16px;
+    --shadow: 0 4px 24px rgba(37,99,235,0.10);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    font-family: 'Nunito', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 0 0 100px 0;
+  }
+
+  .header {
+    background: linear-gradient(135deg, #1e40af 0%, #3b82f6 50%, #60a5fa 100%);
+    color: white;
+    padding: 24px 20px 20px;
+    text-align: center;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 4px 20px rgba(30,64,175,0.3);
+  }
+  .header h1 {
+    font-family: 'Fredoka One', cursive;
+    font-size: 1.5rem;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+  }
+  .header-info {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  .header-info input {
+    background: rgba(255,255,255,0.2);
+    border: 1px solid rgba(255,255,255,0.4);
+    border-radius: 8px;
+    padding: 6px 12px;
+    color: white;
+    font-family: 'Nunito', sans-serif;
+    font-size: 0.85rem;
+    width: 140px;
+    outline: none;
+  }
+  .header-info input::placeholder { color: rgba(255,255,255,0.6); }
+  .header-info input:focus { background: rgba(255,255,255,0.3); border-color: white; }
+
+  .nav-tabs {
+    display: flex;
+    background: white;
+    border-bottom: 2px solid #e2e8f0;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    position: sticky;
+    top: 0;
+    z-index: 99;
+  }
+  .nav-tab {
+    flex: 1;
+    min-width: 0;
+    padding: 12px 6px;
+    text-align: center;
+    font-weight: 700;
+    font-size: 0.75rem;
+    color: var(--text-light);
+    border: none;
+    background: none;
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+  .nav-tab.active {
+    color: var(--primary);
+    border-bottom-color: var(--primary);
+    background: var(--primary-light);
+  }
+  .nav-tab .tab-emoji { font-size: 1.2rem; display: block; margin-bottom: 2px; }
+
+  .page { display: none; padding: 16px; max-width: 800px; margin: 0 auto; }
+  .page.active { display: block; }
+
+  .card {
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 20px;
+    margin-bottom: 16px;
+    box-shadow: var(--shadow);
+  }
+
+  .aufgabe-title {
+    font-family: 'Fredoka One', cursive;
+    font-size: 1.15rem;
+    color: var(--primary-dark);
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .aufgabe-title .emoji { font-size: 1.4rem; }
+
+  .aufgabe-desc {
+    color: var(--text-light);
+    font-size: 0.9rem;
+    line-height: 1.5;
+    margin-bottom: 16px;
+  }
+
+  /* Aufgabe 1: Table */
+  .temp-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  }
+  .temp-table th {
+    background: var(--primary);
+    color: white;
+    padding: 10px 8px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-align: center;
+  }
+  .temp-table th:first-child { text-align: left; padding-left: 14px; }
+  .temp-table td {
+    padding: 6px 8px;
+    border-bottom: 1px solid #e2e8f0;
+    font-size: 0.9rem;
+  }
+  .temp-table tr:nth-child(even) td { background: #f8fafc; }
+  .temp-table tr:last-child td { border-bottom: none; }
+  .temp-table td:first-child {
+    font-weight: 700;
+    color: var(--text);
+    padding-left: 14px;
+    min-width: 130px;
+  }
+  .temp-input {
+    width: 70px;
+    padding: 8px 6px;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    text-align: center;
+    font-family: 'Nunito', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--primary-dark);
+    background: white;
+    transition: border-color 0.2s;
+    -webkit-appearance: none;
+  }
+  .temp-input:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 0 3px rgba(37,99,235,0.15); }
+  .temp-input.filled { border-color: var(--success); background: #f0fdf4; }
+  .unit { color: var(--text-light); font-weight: 600; margin-left: 2px; }
+
+  /* Thermometer */
+  .thermo-container {
+    display: flex;
+    gap: 0;
+    align-items: stretch;
+    margin: 16px 0;
+    position: relative;
+  }
+  .thermo-scale {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    width: 70px;
+    flex-shrink: 0;
+  }
+  .thermo-tube {
+    width: 6px;
+    background: linear-gradient(to bottom, #ef4444, #f59e0b, #3b82f6, #6366f1);
+    border-radius: 3px;
+    flex-shrink: 0;
+    position: relative;
+  }
+  .thermo-ticks {
+    position: relative;
+    flex: 1;
+  }
+  .thermo-row {
+    display: flex;
+    align-items: center;
+    position: relative;
+  }
+  .thermo-label {
+    width: 65px;
+    text-align: right;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--text);
+    padding-right: 6px;
+    flex-shrink: 0;
+  }
+  .thermo-label.empty-label {
+    color: transparent;
+  }
+  .thermo-label input {
+    width: 42px;
+    border: none;
+    border-bottom: 2px dashed #cbd5e1;
+    text-align: right;
+    font-family: 'Nunito', sans-serif;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--primary-dark);
+    background: transparent;
+    padding: 2px 0;
+    outline: none;
+  }
+  .thermo-label input:focus { border-bottom-color: var(--primary); }
+  .thermo-label input.correct { border-bottom-color: var(--success); color: var(--success); }
+  .thermo-bar {
+    width: 6px;
+    background: linear-gradient(to bottom, #ef4444, #3b82f6);
+    flex-shrink: 0;
+    position: relative;
+  }
+  .thermo-tick {
+    height: 2px;
+    background: var(--primary);
+    flex-shrink: 0;
+  }
+  .thermo-tick.major { width: 20px; height: 3px; background: var(--primary-dark); }
+  .thermo-tick.minor { width: 10px; }
+  .thermo-city-area {
+    flex: 1;
+    padding-left: 8px;
+    min-width: 0;
+  }
+  .city-marker {
+    position: absolute;
+    right: -999px; /* placeholder */
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .thermo-grid {
+    width: 100%;
+  }
+  .thermo-grid-row {
+    display: flex;
+    align-items: center;
+    border-left: 4px solid #dc2626;
+  }
+  .thermo-grid-row.zero-row { border-left-color: #000; }
+  .tg-label {
+    width: 68px;
+    text-align: right;
+    padding-right: 8px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+  .tg-label.given { color: var(--text); }
+  .tg-label.blank { color: #aaa; }
+  .tg-label input {
+    width: 38px;
+    border: none;
+    border-bottom: 2px dashed #cbd5e1;
+    text-align: right;
+    font-family: 'Nunito', sans-serif;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--primary-dark);
+    background: transparent;
+    padding: 1px 0;
+    outline: none;
+  }
+  .tg-label input:focus { border-bottom-color: var(--primary); }
+  .tg-label input.correct { color: var(--success); border-bottom-color: var(--success); }
+  .tg-label input.wrong { color: var(--danger); border-bottom-color: var(--danger); }
+  .tg-tick {
+    flex-shrink: 0;
+    background: var(--primary);
+  }
+  .tg-tick.major { width: 24px; height: 3px; }
+  .tg-tick.minor { width: 12px; height: 2px; }
+  .tg-city {
+    flex: 1;
+    padding-left: 10px;
+    min-height: 24px;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+  .city-badge {
+    display: inline-flex;
+    align-items: center;
+    background: var(--primary-light);
+    color: var(--primary-dark);
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 10px;
+    white-space: nowrap;
+  }
+  .zero-line {
+    color: var(--primary);
+    font-size: 0.7rem;
+    font-style: italic;
+  }
+
+  /* Aufgabe 3: Writing */
+  .writing-block {
+    margin-bottom: 14px;
+  }
+  .writing-label {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin-bottom: 6px;
+  }
+  .writing-num {
+    background: var(--primary);
+    color: white;
+    font-weight: 800;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    flex-shrink: 0;
+  }
+  .writing-prompt {
+    font-size: 0.88rem;
+    color: var(--text-light);
+    font-style: italic;
+    line-height: 1.4;
+    padding-top: 3px;
+  }
+  .writing-textarea {
+    width: 100%;
+    min-height: 60px;
+    border: 2px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 10px 12px;
+    font-family: 'Nunito', sans-serif;
+    font-size: 0.95rem;
+    line-height: 1.6;
+    color: var(--text);
+    resize: vertical;
+    outline: none;
+    transition: border-color 0.2s;
+    background: #fafbff;
+  }
+  .writing-textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+  .writing-textarea.filled { border-color: var(--success); background: #f0fdf4; }
+
+  .satzbausteine {
+    background: var(--accent-light);
+    border: 2px solid var(--accent);
+    border-radius: 12px;
+    padding: 14px 16px;
+  }
+  .satzbausteine h3 {
+    font-size: 0.9rem;
+    color: #92400e;
+    margin-bottom: 8px;
+  }
+  .satzbausteine p {
+    font-size: 0.82rem;
+    color: #78350f;
+    font-style: italic;
+    line-height: 1.6;
+    margin-bottom: 2px;
+  }
+
+  /* Aufgabe 4: Rechnen */
+  .calc-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  }
+  .calc-table th {
+    background: var(--primary);
+    color: white;
+    padding: 10px 6px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-align: center;
+  }
+  .calc-table th:first-child { text-align: left; padding-left: 12px; }
+  .calc-table td {
+    padding: 8px 6px;
+    border-bottom: 1px solid #e2e8f0;
+    text-align: center;
+    font-size: 0.9rem;
+  }
+  .calc-table tr:nth-child(even) td { background: #f8fafc; }
+  .calc-table tr:last-child td { border-bottom: none; }
+  .calc-table td:first-child { font-weight: 700; text-align: left; padding-left: 12px; }
+  .calc-val { font-weight: 700; color: var(--primary-dark); }
+  .calc-result {
+    font-weight: 800;
+    font-size: 1.05rem;
+  }
+  .calc-result.correct { color: var(--success); }
+  .calc-result.wrong { color: var(--danger); }
+  .calc-input {
+    width: 55px;
+    padding: 6px 4px;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    text-align: center;
+    font-family: 'Nunito', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--primary-dark);
+    -webkit-appearance: none;
+    outline: none;
+  }
+  .calc-input:focus { border-color: var(--primary); }
+  .calc-input.correct { border-color: var(--success); background: #f0fdf4; }
+  .calc-input.wrong { border-color: var(--danger); background: #fef2f2; }
+
+  /* Hilfe Box */
+  .hilfe-box {
+    background: var(--accent-light);
+    border: 2px solid var(--accent);
+    border-radius: 12px;
+    padding: 14px 16px;
+  }
+  .hilfe-box h3 { color: #92400e; font-size: 0.95rem; margin-bottom: 10px; }
+  .hilfe-item {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 6px;
+    font-size: 0.85rem;
+    line-height: 1.4;
+  }
+  .hilfe-term { font-weight: 800; color: #78350f; min-width: 130px; flex-shrink: 0; }
+  .hilfe-def { color: #92400e; }
+
+  /* Progress bar */
+  .progress-bar {
+    height: 4px;
+    background: rgba(255,255,255,0.2);
+    border-radius: 2px;
+    margin-top: 8px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: #fbbf24;
+    border-radius: 2px;
+    transition: width 0.5s ease;
+  }
+
+  /* Check button */
+  .check-btn {
+    display: block;
+    width: 100%;
+    padding: 14px;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-family: 'Fredoka One', cursive;
+    font-size: 1.05rem;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    margin-top: 12px;
+    transition: background 0.2s, transform 0.1s;
+    -webkit-appearance: none;
+  }
+  .check-btn:active { transform: scale(0.97); background: var(--primary-dark); }
+
+  .feedback {
+    margin-top: 10px;
+    padding: 10px 14px;
+    border-radius: 10px;
+    font-weight: 700;
+    font-size: 0.9rem;
+    text-align: center;
+    display: none;
+  }
+  .feedback.show { display: block; }
+  .feedback.success { background: #d1fae5; color: #065f46; }
+  .feedback.partial { background: #fef3c7; color: #92400e; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>🌡️ Wetterforscher im Einsatz – Tag und Nacht</h1>
+  <div class="header-info">
+    <input type="text" placeholder="Dein Name" id="studentName">
+    <input type="date" id="studentDate">
+    <input type="text" placeholder="Klasse" id="studentClass">
+  </div>
+  <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+</div>
+
+<div class="nav-tabs">
+  <button class="nav-tab active" onclick="showPage(0)"><span class="tab-emoji">🔍</span>Recherche</button>
+  <button class="nav-tab" onclick="showPage(1)"><span class="tab-emoji">✍️</span>Vergleichen</button>
+  <button class="nav-tab" onclick="showPage(2)"><span class="tab-emoji">🌡️</span>Thermometer</button>
+  <button class="nav-tab" onclick="showPage(3)"><span class="tab-emoji">🧮</span>Rechnen</button>
+</div>
+
+<!-- AUFGABE 1 -->
+<div class="page active" id="page0">
+  <div class="card">
+    <div class="aufgabe-title"><span class="emoji">🔍</span> Aufgabe 1: Die Wetter-Recherche</div>
+    <p class="aufgabe-desc">Suche auf <b>www.wetter.de</b> nach der Minimal- und Maximaltemperatur für heute. Trage die Werte in die Tabelle ein.</p>
+    <table class="temp-table">
+      <thead>
+        <tr><th>Stadt</th><th>Minimal (Nacht)</th><th>Maximal (Tag)</th></tr>
+      </thead>
+      <tbody id="tempTableBody"></tbody>
+    </table>
+  </div>
+  <button class="check-btn" onclick="showPage(1)">Weiter zu Aufgabe 2 ➡️</button>
+</div>
+
+<!-- AUFGABE 2 (Vergleichen) -->
+<div class="page" id="page1">
+  <div class="card">
+    <div class="aufgabe-title"><span class="emoji">✍️</span> Aufgabe 2: Temperaturen vergleichen</div>
+    <p class="aufgabe-desc">Vergleiche die Minimal- und Maximaltemperaturen der Städte. Schreibe eigene Sätze. Die Satzbausteine helfen dir.</p>
+    <div id="writingBlocks"></div>
+  </div>
+  <div class="card satzbausteine">
+    <h3>🗣️ Satzbausteine – benutze sie für deine Vergleiche:</h3>
+    <p>• „In ___ ist die Nacht kälter / wärmer als in ___."</p>
+    <p>• „Die niedrigste / höchste Temperatur hat ___ mit ___ °C."</p>
+    <p>• „Am Tag ist es in ___ heißer / kühler als in ___."</p>
+    <p>• „In ___ steigt die Temperatur von ___ °C (Nacht) auf ___ °C (Tag)."</p>
+    <p>• „___ hat die größte / kleinste Maximaltemperatur."</p>
+  </div>
+  <button class="check-btn" onclick="showPage(2)">Weiter zu Aufgabe 3 ➡️</button>
+</div>
+
+<!-- AUFGABE 3 (Thermometer) -->
+<div class="page" id="page2">
+  <div class="card">
+    <div class="aufgabe-title"><span class="emoji">🌡️</span> Aufgabe 3: Thermometer – Skala ergänzen</div>
+    <p class="aufgabe-desc"><b>a)</b> Ergänze die fehlenden Zahlen auf der Skala. Lange Striche = 10°-Schritte, kurze = 5°-Schritte.<br>
+    <b>b)</b> Die Minimal-Temperaturen aus Aufgabe 1 werden automatisch als Markierungen angezeigt.</p>
+    <div id="thermoGrid"></div>
+    <button class="check-btn" onclick="checkThermo()" style="margin-top:16px">Skala überprüfen ✓</button>
+    <div class="feedback" id="thermoFeedback"></div>
+  </div>
+  <button class="check-btn" onclick="showPage(3)" style="background:#10b981">Weiter zu Aufgabe 4 ➡️</button>
+</div>
+
+<!-- AUFGABE 4 (Rechnen) -->
+<div class="page" id="page3">
+  <div class="card">
+    <div class="aufgabe-title"><span class="emoji">🧮</span> Aufgabe 4: Temperaturunterschied berechnen</div>
+    <p class="aufgabe-desc">Wie stark ändert sich die Temperatur zwischen Tag und Nacht? Berechne den Unterschied.</p>
+    <p style="background:var(--primary-light);padding:8px 12px;border-radius:8px;font-size:0.85rem;margin-bottom:14px;color:var(--primary-dark)">
+      <b>Beispiel Wülfrath:</b> Minimal: +2°C | Maximal: +10°C ➡️ Unterschied: <b>8 Grad</b>
+    </p>
+    <table class="calc-table">
+      <thead>
+        <tr><th>Stadt</th><th>Min (°C)</th><th>Max (°C)</th><th>Unterschied</th></tr>
+      </thead>
+      <tbody id="calcTableBody"></tbody>
+    </table>
+    <button class="check-btn" onclick="checkCalc()">Antworten prüfen ✓</button>
+    <div class="feedback" id="calcFeedback"></div>
+  </div>
+  <div class="card hilfe-box">
+    <h3>💡 Hilfe-Box (Wortspeicher)</h3>
+    <div class="hilfe-item"><span class="hilfe-term">Minimaltemperatur</span><span class="hilfe-def">Der tiefste Wert (meistens nachts).</span></div>
+    <div class="hilfe-item"><span class="hilfe-term">Maximaltemperatur</span><span class="hilfe-def">Der höchste Wert (meistens mittags).</span></div>
+    <div class="hilfe-item"><span class="hilfe-term">Temperaturunterschied</span><span class="hilfe-def">Die Anzahl der Schritte (Grad) zwischen zwei Werten.</span></div>
+  </div>
+</div>
+
+<script>
+const cities = [
+  { name: "Moskau", country: "Russland", flag: "🇷🇺" },
+  { name: "Berlin", country: "Deutschland", flag: "🇩🇪" },
+  { name: "Kairo", country: "Ägypten", flag: "🇪🇬" },
+  { name: "Oslo", country: "Norwegen", flag: "🇳🇴" },
+  { name: "Paris", country: "Frankreich", flag: "🇫🇷" },
+  { name: "Wülfrath", country: "Heimat", flag: "🏠" },
+];
+
+const writingPrompts = [
+  { id: "a", text: "Vergleiche zwei Städte nach ihren Minimal-Temperaturen (Nacht)." },
+  { id: "b", text: "Vergleiche zwei Städte nach ihren Maximal-Temperaturen (Tag)." },
+  { id: "c", text: "In welcher Stadt ist es nachts am kältesten? In welcher am wärmsten? Schreibe einen Vergleich." },
+  { id: "d", text: "In welcher Stadt ist es tagsüber am heißesten? In welcher am kühlsten? Schreibe einen Vergleich." },
+  { id: "e", text: "Wähle eine Stadt aus und vergleiche ihre Nacht-Temperatur mit ihrer Tag-Temperatur." },
+];
+
+const givenThermo = new Set([40, 20, 0, -20]);
+
+// Build Aufgabe 1
+const tempBody = document.getElementById('tempTableBody');
+cities.forEach((c, i) => {
+  const tr = document.createElement('tr');
+  tr.innerHTML = `
+    <td>${c.flag} ${c.name} <span style="color:#94a3b8;font-weight:400;font-size:0.8rem">(${c.country})</span></td>
+    <td style="text-align:center"><input type="number" class="temp-input" id="min_${i}" step="1" oninput="onTempChange(this)"> <span class="unit">°C</span></td>
+    <td style="text-align:center"><input type="number" class="temp-input" id="max_${i}" step="1" oninput="onTempChange(this)"> <span class="unit">°C</span></td>
+  `;
+  tempBody.appendChild(tr);
+});
+
+// Build Aufgabe 2
+const writingDiv = document.getElementById('writingBlocks');
+writingPrompts.forEach(p => {
+  const block = document.createElement('div');
+  block.className = 'writing-block';
+  block.innerHTML = `
+    <div class="writing-label">
+      <div class="writing-num">${p.id}</div>
+      <div class="writing-prompt">${p.text}</div>
+    </div>
+    <textarea class="writing-textarea" placeholder="Schreibe deinen Satz hier..." oninput="onWritingChange(this)"></textarea>
+  `;
+  writingDiv.appendChild(block);
+});
+
+// Build Thermometer
+function buildThermo() {
+  const grid = document.getElementById('thermoGrid');
+  grid.innerHTML = '';
+  for (let t = 40; t >= -30; t -= 5) {
+    const isTen = t % 10 === 0;
+    const isZero = t === 0;
+    const isGiven = givenThermo.has(t);
+    const row = document.createElement('div');
+    row.className = 'thermo-grid-row' + (isZero ? ' zero-row' : '');
+    row.style.height = isTen ? '32px' : '24px';
+
+    let labelHtml;
+    if (isGiven) {
+      const prefix = t > 0 ? '+' : '';
+      labelHtml = `<div class="tg-label given">${prefix}${t} °C</div>`;
+    } else {
+      labelHtml = `<div class="tg-label blank"><input type="number" id="thermo_${t}" data-val="${t}" step="1" placeholder="?"> °C</div>`;
+    }
+
+    const tickClass = isTen ? 'major' : 'minor';
+    const cityBadges = getCityBadgesAt(t);
+    const cityHtml = isZero
+      ? `<span class="zero-line">← Gefrierpunkt</span> ${cityBadges}`
+      : cityBadges;
+
+    row.innerHTML = `${labelHtml}<div class="tg-tick ${tickClass}"></div><div class="tg-city">${cityHtml}</div>`;
+    grid.appendChild(row);
+  }
+}
+
+function getCityBadgesAt(temp) {
+  let badges = '';
+  cities.forEach((c, i) => {
+    const val = document.getElementById('min_' + i)?.value;
+    if (val !== '' && val !== undefined) {
+      const v = parseInt(val);
+      // Round to nearest 5
+      const nearest = Math.round(v / 5) * 5;
+      if (nearest === temp) {
+        badges += `<span class="city-badge">${c.flag} ${c.name} (${v}°C)</span> `;
+      }
+    }
+  });
+  return badges;
+}
+
+// Build Aufgabe 4
+function buildCalcTable() {
+  const body = document.getElementById('calcTableBody');
+  body.innerHTML = '';
+  cities.forEach((c, i) => {
+    const minVal = document.getElementById('min_' + i)?.value;
+    const maxVal = document.getElementById('max_' + i)?.value;
+    const minDisp = minVal !== '' ? minVal + '°C' : '—';
+    const maxDisp = maxVal !== '' ? maxVal + '°C' : '—';
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${c.flag} ${c.name}</td>
+      <td><span class="calc-val">${minDisp}</span></td>
+      <td><span class="calc-val">${maxDisp}</span></td>
+      <td><input type="number" class="calc-input" id="diff_${i}" step="1" placeholder="?"> Grad</td>
+    `;
+    body.appendChild(tr);
+  });
+}
+
+function onTempChange(el) {
+  if (el.value !== '') el.classList.add('filled');
+  else el.classList.remove('filled');
+  updateProgress();
+}
+
+function onWritingChange(el) {
+  if (el.value.trim().length > 5) el.classList.add('filled');
+  else el.classList.remove('filled');
+  updateProgress();
+}
+
+function showPage(idx) {
+  document.querySelectorAll('.page').forEach((p, i) => p.classList.toggle('active', i === idx));
+  document.querySelectorAll('.nav-tab').forEach((t, i) => t.classList.toggle('active', i === idx));
+  window.scrollTo(0, 0);
+  if (idx === 2) buildThermo();
+  if (idx === 3) buildCalcTable();
+}
+
+function checkThermo() {
+  let correct = 0, total = 0;
+  for (let t = 40; t >= -30; t -= 5) {
+    if (givenThermo.has(t)) continue;
+    total++;
+    const inp = document.getElementById('thermo_' + t);
+    if (!inp) continue;
+    const v = parseInt(inp.value);
+    if (v === t) {
+      inp.classList.add('correct');
+      inp.classList.remove('wrong');
+      correct++;
+    } else if (inp.value !== '') {
+      inp.classList.add('wrong');
+      inp.classList.remove('correct');
+    }
+  }
+  const fb = document.getElementById('thermoFeedback');
+  fb.classList.add('show');
+  if (correct === total) {
+    fb.className = 'feedback show success';
+    fb.textContent = `🎉 Super! Alle ${total} Werte sind richtig!`;
+  } else {
+    fb.className = 'feedback show partial';
+    fb.textContent = `${correct} von ${total} richtig. Versuche es nochmal!`;
+  }
+  updateProgress();
+}
+
+function checkCalc() {
+  let correct = 0, total = 0;
+  cities.forEach((c, i) => {
+    const minVal = document.getElementById('min_' + i)?.value;
+    const maxVal = document.getElementById('max_' + i)?.value;
+    const diffInp = document.getElementById('diff_' + i);
+    if (!diffInp || minVal === '' || maxVal === '') return;
+    total++;
+    const expected = Math.abs(parseFloat(maxVal) - parseFloat(minVal));
+    const given = parseFloat(diffInp.value);
+    if (Math.abs(given - expected) < 0.5) {
+      diffInp.classList.add('correct');
+      diffInp.classList.remove('wrong');
+      correct++;
+    } else if (diffInp.value !== '') {
+      diffInp.classList.add('wrong');
+      diffInp.classList.remove('correct');
+    }
+  });
+  const fb = document.getElementById('calcFeedback');
+  fb.classList.add('show');
+  if (correct === total && total > 0) {
+    fb.className = 'feedback show success';
+    fb.textContent = `🎉 Perfekt! Alle ${total} Berechnungen stimmen!`;
+  } else if (total === 0) {
+    fb.className = 'feedback show partial';
+    fb.textContent = 'Trage zuerst die Temperaturen in Aufgabe 1 ein!';
+  } else {
+    fb.className = 'feedback show partial';
+    fb.textContent = `${correct} von ${total} richtig. Prüfe deine Rechnung nochmal!`;
+  }
+  updateProgress();
+}
+
+function updateProgress() {
+  let filled = 0, total = 0;
+  // Aufgabe 1: 12 inputs
+  cities.forEach((c, i) => {
+    total += 2;
+    if (document.getElementById('min_' + i)?.value !== '') filled++;
+    if (document.getElementById('max_' + i)?.value !== '') filled++;
+  });
+  // Aufgabe 2: 5 textareas
+  document.querySelectorAll('.writing-textarea').forEach(ta => {
+    total++;
+    if (ta.value.trim().length > 5) filled++;
+  });
+  // Thermo: count filled correct
+  for (let t = 40; t >= -30; t -= 5) {
+    if (givenThermo.has(t)) continue;
+    total++;
+    const inp = document.getElementById('thermo_' + t);
+    if (inp && inp.classList.contains('correct')) filled++;
+  }
+  // Aufgabe 4
+  cities.forEach((c, i) => {
+    total++;
+    const inp = document.getElementById('diff_' + i);
+    if (inp && inp.classList.contains('correct')) filled++;
+  });
+  const pct = total > 0 ? Math.round((filled / total) * 100) : 0;
+  document.getElementById('progressFill').style.width = pct + '%';
+}
+
+// Init date
+document.getElementById('studentDate').valueAsDate = new Date();
+</script>
+
+</body>
+</html>
